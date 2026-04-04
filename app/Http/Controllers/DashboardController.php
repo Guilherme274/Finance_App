@@ -26,14 +26,21 @@ class DashboardController extends Controller
 
         $totalBalance = $accounts->sum('balance');
 
+        $investments = $user->investments()->orderBy('balance', 'desc')->get();
+        $totalInvested = $investments->sum('balance');
+        $investmentsGrouped = $investments->groupBy(function($item) {
+            return $item->type ?: 'OUTROS';
+        });
+
         // Generate pluggy connect token
         $connectToken = null;
+        $connectError = null;
         try {
             $connectToken = $pluggyService->createConnectToken();
         } catch (\Exception $e) {
-            // Silently handle if keys are wrong for now, or display alert later
+            $connectError = $e->getMessage();
         }
 
-        return view('dashboard', compact('user', 'accounts', 'transactions', 'totalBalance', 'connectToken'));
+        return view('dashboard', compact('user', 'accounts', 'transactions', 'totalBalance', 'connectToken', 'connectError', 'totalInvested', 'investmentsGrouped'));
     }
 }

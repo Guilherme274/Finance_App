@@ -11,9 +11,11 @@ class PluggyService
 
     public function __construct()
     {
-        // Try getting API Key directly from env first
-        $this->apiKey = env('PLUGGY_API_KEY');
-        
+        // API Key will be generated on demand
+    }
+
+    protected function ensureAuthenticated()
+    {
         if (!$this->apiKey) {
             $this->authenticate();
         }
@@ -24,7 +26,7 @@ class PluggyService
      */
     public function authenticate()
     {
-        $response = Http::post("{$this->baseUrl}/auth", [
+        $response = Http::withoutVerifying()->post("{$this->baseUrl}/auth", [
             'clientId' => env('PLUGGY_CLIENT_ID'),
             'clientSecret' => env('PLUGGY_CLIENT_SECRET'),
         ]);
@@ -41,13 +43,16 @@ class PluggyService
      */
     public function createConnectToken(?string $itemId = null)
     {
+        $this->ensureAuthenticated();
+
         $payload = [];
         if ($itemId) {
             $payload['itemId'] = $itemId;
         }
 
-        $response = Http::withHeader('X-API-KEY', $this->apiKey)
-            ->post("{$this->baseUrl}/connect_tokens", $payload);
+        $response = Http::withoutVerifying()
+            ->withHeader('X-API-KEY', $this->apiKey)
+            ->post("{$this->baseUrl}/connect_token", $payload);
 
         if ($response->successful()) {
             return $response->json('accessToken');
@@ -56,38 +61,58 @@ class PluggyService
         throw new \Exception('Failed to create connect token: ' . $response->body());
     }
 
-    /**
-     * Buscar Contas atreladas a um Item (Conexão)
-     */
     public function getAccounts(string $itemId)
     {
-        $response = Http::withHeader('X-API-KEY', $this->apiKey)
+        $this->ensureAuthenticated();
+
+        $response = Http::withoutVerifying()
+            ->withHeader('X-API-KEY', $this->apiKey)
             ->get("{$this->baseUrl}/accounts", [
                 'itemId' => $itemId,
             ]);
 
         if ($response->successful()) {
-            return $response->json('results');
+            return $response->json('results') ?? [];
         }
 
-        return [];
+        throw new \Exception('Error fetching accounts: ' . $response->body());
     }
 
-    /**
-     * Buscar Transações atreladas a uma Conta
-     */
     public function getTransactions(string $accountId)
     {
-        $response = Http::withHeader('X-API-KEY', $this->apiKey)
+        $this->ensureAuthenticated();
+
+        $response = Http::withoutVerifying()
+            ->withHeader('X-API-KEY', $this->apiKey)
             ->get("{$this->baseUrl}/transactions", [
                 'accountId' => $accountId,
             ]);
 
         if ($response->successful()) {
-            return $response->json('results');
+            return $response->json('results') ?? [];
         }
 
-        return [];
+        throw new \Exception('Error fetching transactions: ' . $response->body());
+    }
+
+    /**
+     * Buscar Investimentos atrelados a um Item
+     */
+    public function getInvestments(string $itemId)
+    {
+        $this->ensureAuthenticated();
+
+        $response = Http::withoutVerifying()
+            ->withHeader('X-API-KEY', $this->apiKey)
+            ->get("{$this->baseUrl}/investments", [
+                'itemId' => $itemId,
+            ]);
+
+        if ($response->successful()) {
+            return $response->json('results') ?? [];
+        }
+
+        return []; // We return empty array silently for items that might not have investments supported
     }
     
     /**

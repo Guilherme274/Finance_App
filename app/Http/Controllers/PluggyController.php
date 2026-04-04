@@ -21,6 +21,9 @@ class PluggyController extends Controller
         $user = User::first();
 
         try {
+            // Aguarda 3 segundos para dar tempo à API do Pluggy processar a coleta inicial em contas de testes
+            sleep(3);
+
             // Fetch Accounts
             $accounts = $pluggyService->getAccounts($itemId);
             
@@ -55,6 +58,25 @@ class PluggyController extends Controller
                         ]
                     );
                 }
+            }
+
+            // Fetch Investments for this Item
+            $investments = $pluggyService->getInvestments($itemId);
+            foreach ($investments as $inv) {
+                \App\Models\Investment::updateOrCreate(
+                    ['pluggy_investment_id' => $inv['id']],
+                    [
+                        'user_id' => $user->id,
+                        'pluggy_item_id' => $itemId,
+                        'name' => $inv['name'] ?? 'Investimento',
+                        'balance' => $inv['balance'] ?? 0,
+                        'currency' => $inv['currencyCode'] ?? 'BRL',
+                        'type' => $inv['type'] ?? 'UNKNOWN',
+                        'subtype' => $inv['subtype'] ?? 'UNKNOWN',
+                        'number' => $inv['number'] ?? null,
+                        'metadata' => $inv['metadata'] ?? null,
+                    ]
+                );
             }
 
             return redirect()->back()->with('success', 'Contas e Transações sincronizadas com sucesso!');

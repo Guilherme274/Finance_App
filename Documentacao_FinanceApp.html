@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentação - FinanceApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none; }
+            body { background: white !important; color: black !important; }
+            .card { border: 1px solid #e2e8f0; box-shadow: none !important; }
+        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="p-8 md:p-16">
+
+    <div class="max-w-4xl mx-auto bg-white p-10 rounded-2xl shadow-sm card">
+        <header class="border-b-2 border-indigo-600 pb-6 mb-10 flex justify-between items-end">
+            <div>
+                <h1 class="text-4xl font-extrabold text-slate-900">FinanceApp</h1>
+                <p class="text-indigo-600 font-semibold tracking-wide uppercase text-sm mt-2">Documentação Técnica de Fluxo</p>
+            </div>
+            <div class="text-right text-slate-400 text-xs">
+                DATA: 04/04/2026<br>
+                VERSÃO: 1.0.0
+            </div>
+        </header>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-4 flex items-center">
+                <span class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">01</span>
+                Visão Geral do Ciclo de Dados
+            </h2>
+            <div class="bg-indigo-50 p-6 rounded-xl border-l-4 border-indigo-500 italic text-slate-700">
+                O FinanceApp opera integrando a API Open Finance da <strong>Pluggy</strong> com um banco de dados local <strong>MySQL</strong>, garantindo velocidade de carregamento e persistência das informações financeiras.
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+                <span class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">02</span>
+                Fluxo de Funcionamento (Step-by-Step)
+            </h2>
+            
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="font-bold text-indigo-400 text-xl">1.</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800">Autorização do Usuário (Widget)</h4>
+                        <p class="text-slate-600">O usuário inicia a conexão via <i>Pluggy Connect Widget</i> no navegador. Ao finalizar a autenticação no banco, o Widget gera um <strong>Item_ID</strong> exclusivo.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="font-bold text-indigo-400 text-xl">2.</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800">Gatilho de Sincronização</h4>
+                        <p class="text-slate-600">O navegador envia este ID para a rota do servidor Laravel (POST <code>/pluggy/sync</code>). O servidor entra em modo de espera para processar a coleta.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="font-bold text-indigo-400 text-xl">3.</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800">Busca e Persistência (Back-end)</h4>
+                        <p class="text-slate-600">O <strong>PluggyService</strong> consome a API REST da Pluggy buscando Contas e Transações. Os dados são convertidos e salvos no MySQL através dos modelos <strong>BankAccount</strong> e <strong>Transaction</strong>.</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-4">
+                    <div class="font-bold text-indigo-400 text-xl">4.</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800">Renderização do Dashboard</h4>
+                        <p class="text-slate-600">Com os dados locais atualizados, o <strong>DashboardController</strong> extrai os saldos e o extrato do MySQL para exibição instantânea na interface.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-800 mb-6 flex items-center">
+                <span class="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center mr-3 text-sm">03</span>
+                Mapa de Responsabilidades dos Arquivos
+            </h2>
+
+            <table class="w-full text-left border-collapse border border-slate-200 rounded-lg">
+                <thead>
+                    <tr class="bg-slate-50">
+                        <th class="p-4 border-b font-bold text-slate-700">Arquivo / Local</th>
+                        <th class="p-4 border-b font-bold text-slate-700">Responsabilidade Crucial</th>
+                    </tr>
+                </thead>
+                <tbody class="text-slate-600 text-sm">
+                    <tr>
+                        <td class="p-4 border-b font-mono">dashboard.blade.php</td>
+                        <td class="p-4 border-b">Interface Visual + Inicialização do Script JS da Pluggy.</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-mono">PluggyService.php</td>
+                        <td class="p-4 border-b">Comunicação REST (Auth, Token e Fetch) com a Pluggy.ai.</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-mono">PluggyController.php</td>
+                        <td class="p-4 border-b">Gerenciamento do recebimento de tokens e salvamento no MySQL.</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-mono">DashboardController.php</td>
+                        <td class="p-4 border-b">Leitura de dados locais para exibição no painel financeiro.</td>
+                    </tr>
+                    <tr>
+                        <td class="p-4 border-b font-mono">BankAccount / Transaction.php</td>
+                        <td class="p-4 border-b">Modelagem dos dados e relacionamentos de banco de dados.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <footer class="mt-20 pt-8 border-t border-slate-100 text-center text-slate-400 text-sm italic">
+            Documento gerado para fins técnicos e educacionais do projeto FinanceApp.
+        </footer>
+    </div>
+
+    <div class="fixed bottom-8 right-8 no-print">
+        <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-full shadow-lg font-bold flex items-center transition">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+            Salvar como PDF / Imprimir
+        </button>
+    </div>
+
+</body>
+</html>

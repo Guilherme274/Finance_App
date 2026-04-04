@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="dark">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,16 +8,38 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Pluggy Connect Widget -->
-    <script src="https://cdn.pluggy.ai/pluggy-connect/v1.0.0/pluggy-connect.js"></script>
+    <script src="https://cdn.pluggy.ai/pluggy-connect/latest/pluggy-connect.js"></script>
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
-        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
-        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.2); }
-        .gradient-text { background: linear-gradient(135deg, #a78bfa, #c084fc, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-hover {
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.2);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #a78bfa, #c084fc, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -33,6 +56,7 @@
         }
     </script>
 </head>
+
 <body class="min-h-screen flex flex-col">
 
     <!-- Header -->
@@ -44,7 +68,7 @@
                 </div>
                 <h1 class="text-2xl font-bold tracking-tight">Finance<span class="gradient-text">App</span></h1>
             </div>
-            
+
             <div class="flex items-center gap-4">
                 <div class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
@@ -59,7 +83,7 @@
 
     <!-- Main Content -->
     <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
-        
+
         <!-- Messages -->
         @if(session('success'))
         <div class="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex gap-3 items-center text-emerald-400">
@@ -74,29 +98,42 @@
         </div>
         @endif
 
-        <!-- Dashboard Overview Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            
-            <div class="md:col-span-2 glass rounded-3xl p-8 card-hover relative overflow-hidden group">
-                <div class="absolute -right-10 -top-10 w-40 h-40 bg-violet-600/20 rounded-full blur-3xl group-hover:bg-violet-600/30 transition duration-500"></div>
-                <p class="text-slate-400 font-medium mb-1 uppercase tracking-wider text-sm">Saldo Consolidado</p>
-                <div class="flex items-baseline gap-2 mb-4">
-                    <span class="text-5xl font-bold text-white">R$ {{ number_format($totalBalance, 2, ',', '.') }}</span>
-                </div>
-                <div class="flex gap-4 opacity-80">
-                    <div class="flex items-center gap-1 text-emerald-400 text-sm font-medium"><i class="fa-solid fa-arrow-trend-up"></i> Atualizado hoje</div>
-                    <div class="flex items-center gap-1 text-slate-300 text-sm"><i class="fa-solid fa-building-columns relative top-[-1px]"></i> {{ $accounts->count() }} Contas vinculadas</div>
-                </div>
-            </div>
+        <!-- Tabs Navigation -->
+        <div class="border-b border-slate-700/50 mb-8 mt-2">
+            <nav class="-mb-px flex space-x-8 px-2" aria-label="Tabs">
+                <button id="tab-btn-overview" onclick="switchTab('overview')" class="border-fuchsia-500 text-fuchsia-400 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors" aria-current="page">
+                    <i class="fa-solid fa-wallet mr-2"></i>Visão Geral
+                </button>
+                <button id="tab-btn-investments" onclick="switchTab('investments')" class="border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors">
+                    <i class="fa-solid fa-chart-line mr-2"></i>Meus Investimentos
+                </button>
+            </nav>
+        </div>
 
-            <div class="glass rounded-3xl p-8 card-hover flex flex-col items-center justify-center text-center">
-                <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
-                    <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
+        <div id="tab-overview">
+            <!-- Dashboard Overview Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
+                <div class="md:col-span-2 glass rounded-3xl p-8 card-hover relative overflow-hidden group">
+                    <div class="absolute -right-10 -top-10 w-40 h-40 bg-violet-600/20 rounded-full blur-3xl group-hover:bg-violet-600/30 transition duration-500"></div>
+                    <p class="text-slate-400 font-medium mb-1 uppercase tracking-wider text-sm">Saldo Consolidado</p>
+                    <div class="flex items-baseline gap-2 mb-4">
+                        <span class="text-5xl font-bold text-white">R$ {{ number_format($totalBalance, 2, ',', '.') }}</span>
+                    </div>
+                    <div class="flex gap-4 opacity-80">
+                        <div class="flex items-center gap-1 text-emerald-400 text-sm font-medium"><i class="fa-solid fa-arrow-trend-up"></i> Atualizado hoje</div>
+                        <div class="flex items-center gap-1 text-slate-300 text-sm"><i class="fa-solid fa-building-columns relative top-[-1px]"></i> {{ $accounts->count() }} Contas vinculadas</div>
+                    </div>
                 </div>
-                <h3 class="text-lg font-semibold text-white mb-2">Conectar Nova Instituição</h3>
-                <p class="text-slate-400 text-sm mb-5">Vincule sua conta bancária de forma segura via Pluggy.</p>
-                
-                @if($connectToken)
+
+                <div class="glass rounded-3xl p-8 card-hover flex flex-col items-center justify-center text-center">
+                    <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white mb-2">Conectar Nova Instituição</h3>
+                    <p class="text-slate-400 text-sm mb-5">Vincule sua conta bancária de forma segura via Pluggy.</p>
+
+                    @if($connectToken)
                     <button id="pluggyConnectBtn" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-violet-500/25">
                         <i class="fa-solid fa-plug mr-2"></i> Conectar Banco
                     </button>
@@ -105,96 +142,190 @@
                         @csrf
                         <input type="hidden" name="item_id" id="syncItemId">
                     </form>
-                @else
-                    <div class="w-full py-3 px-6 rounded-xl bg-red-500/10 text-red-400 text-sm font-medium border border-red-500/20">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciais inválidas no .env (API Key).
+                    @else
+                    <div class="w-full py-3 px-4 rounded-xl bg-red-500/10 text-red-400 text-xs text-left font-medium border border-red-500/20 break-words">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Erro de Conexão: <br>
+                        {{ $connectError ?? 'Credenciais da Pluggy ausentes no .env' }}
                     </div>
-                @endif
+                    @endif
+                </div>
+
             </div>
 
-        </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Accounts List -->
+                <div class="lg:col-span-1 space-y-4">
+                    <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i class="fa-solid fa-building-columns text-slate-400 text-sm"></i> Minhas Contas</h2>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Accounts List -->
-            <div class="lg:col-span-1 space-y-4">
-                <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i class="fa-solid fa-building-columns text-slate-400 text-sm"></i> Minhas Contas</h2>
-                
-                @forelse($accounts as $acc)
-                <div class="glass rounded-2xl p-5 card-hover">
-                    <div class="flex justify-between items-start mb-3">
+                    @forelse($accounts as $acc)
+                    <div class="glass rounded-2xl p-5 card-hover">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-semibold text-white text-lg">{{ $acc->name }}</h4>
+                                <p class="text-xs text-slate-400 uppercase tracking-wide">{{ $acc->type }}</p>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                                <i class="fa-solid fa-wallet text-slate-400 text-xs"></i>
+                            </div>
+                        </div>
                         <div>
-                            <h4 class="font-semibold text-white text-lg">{{ $acc->name }}</h4>
-                            <p class="text-xs text-slate-400 uppercase tracking-wide">{{ $acc->type }}</p>
-                        </div>
-                        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
-                            <i class="fa-solid fa-wallet text-slate-400 text-xs"></i>
+                            <p class="text-2xl font-bold tracking-tight text-white">R$ {{ number_format($acc->balance, 2, ',', '.') }}</p>
+                            <p class="text-xs text-emerald-400 mt-1"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Sincronizado</p>
                         </div>
                     </div>
-                    <div>
-                        <p class="text-2xl font-bold tracking-tight text-white">R$ {{ number_format($acc->balance, 2, ',', '.') }}</p>
-                        <p class="text-xs text-emerald-400 mt-1"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Sincronizado</p>
+                    @empty
+                    <div class="glass border-dashed border-2 border-slate-700 rounded-2xl p-8 text-center text-slate-500">
+                        Nenhuma conta bancária vinculada.
+                    </div>
+                    @endforelse
+                </div>
+
+                <!-- Transactions -->
+                <div class="lg:col-span-2">
+                    <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i class="fa-regular fa-rectangle-list text-slate-400 text-sm"></i> Últimas Transações</h2>
+
+                    <div class="glass rounded-3xl overflow-hidden shadow-xl border border-slate-700/50">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-800/80 border-b border-slate-700/80">
+                                        <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Data</th>
+                                        <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Descrição</th>
+                                        <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Conta</th>
+                                        <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium text-right">Valor</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-700/50">
+                                    @forelse($transactions as $txn)
+                                    <tr class="hover:bg-slate-800/40 transition">
+                                        <td class="py-4 px-6 text-sm text-slate-300 font-medium whitespace-nowrap">{{ \Carbon\Carbon::parse($txn->date)->format('d/m/Y') }}</td>
+                                        <td class="py-4 px-6 text-sm text-white">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-lg {{ $txn->amount < 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400' }} flex items-center justify-center shrink-0">
+                                                    <i class="fa-solid {{ $txn->amount < 0 ? 'fa-arrow-down' : 'fa-arrow-up' }} text-xs"></i>
+                                                </div>
+                                                <span class="truncate max-w-[200px] md:max-w-md pb-[2px]">{{ $txn->description }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 text-sm text-slate-400 whitespace-nowrap">{{ $txn->bankAccount->name }}</td>
+                                        <td class="py-4 px-6 text-sm font-semibold text-right whitespace-nowrap {{ $txn->amount < 0 ? 'text-white' : 'text-emerald-400' }}">
+                                            {{ $txn->amount < 0 ? '-' : '+' }} R$ {{ number_format(abs($txn->amount), 2, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                    @empty
+                                    <tr>
+                                        <td colspan="4" class="py-12 px-6 text-center text-slate-500">
+                                            As transações aparecerão aqui após conectar uma conta.
+                                        </td>
+                                    </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-                @empty
-                <div class="glass border-dashed border-2 border-slate-700 rounded-2xl p-8 text-center text-slate-500">
-                    Nenhuma conta bancária vinculada.
+            </div>
+        </div> <!-- End tab-overview -->
+
+        <div id="tab-investments" class="hidden">
+            <!-- Grid Top: Investments Balance -->
+            <div class="grid grid-cols-1 mb-8">
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 shadow-xl backdrop-blur-xl relative overflow-hidden group">
+                    <div class="absolute -right-20 -top-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all duration-500"></div>
+                    <div class="relative z-10 text-center">
+                        <p class="text-slate-400 text-sm font-semibold tracking-wider mb-2 uppercase">Total Investido (Consolidado)</p>
+                        <h2 class="text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-emerald-400 to-teal-200">
+                            R$ {{ number_format($totalInvested, 2, ',', '.') }}
+                        </h2>
+                    </div>
                 </div>
-                @endforelse
             </div>
 
-            <!-- Transactions -->
-            <div class="lg:col-span-2">
-                <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i class="fa-regular fa-rectangle-list text-slate-400 text-sm"></i> Últimas Transações</h2>
-                
-                <div class="glass rounded-3xl overflow-hidden shadow-xl border border-slate-700/50">
+            <!-- Categorized Tables -->
+            <div class="space-y-8">
+                @if($investmentsGrouped->isEmpty())
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-8 text-center border-dashed border-2">
+                    <i class="fa-solid fa-seedling text-4xl text-slate-600 mb-3"></i>
+                    <p class="text-slate-400 text-sm">Sua carteira de investimentos está vazia ou não foi sincronizada.</p>
+                </div>
+                @else
+                @foreach($investmentsGrouped as $type => $group)
+                <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl shadow-xl backdrop-blur-xl overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-700/50 bg-slate-800/60 flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                            <i class="fa-solid @if($type=='FIXED_INCOME') fa-building-columns @elseif($type=='MUTUAL_FUND') fa-briefcase @elseif($type=='EQUITY') fa-arrow-trend-up @else fa-piggy-bank @endif"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-white tracking-wide uppercase">{{ str_replace('_', ' ', $type) }}</h3>
+                        <span class="ml-auto text-sm text-slate-400 font-medium pb-1 border-b border-slate-600">
+                            R$ {{ number_format($group->sum('balance'), 2, ',', '.') }}
+                        </span>
+                    </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-800/80 border-b border-slate-700/80">
-                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Data</th>
-                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Descrição</th>
-                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Conta</th>
-                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium text-right">Valor</th>
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-400 uppercase bg-slate-900/30">
+                                <tr>
+                                    <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Ativo / Nome</th>
+                                    <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Produto</th>
+                                    <th scope="col" class="px-6 py-4 font-semibold tracking-wider">Conta</th>
+                                    <th scope="col" class="px-6 py-4 text-right font-semibold tracking-wider">Saldo Atual</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-700/50">
-                                @forelse($transactions as $txn)
-                                <tr class="hover:bg-slate-800/40 transition">
-                                    <td class="py-4 px-6 text-sm text-slate-300 font-medium whitespace-nowrap">{{ \Carbon\Carbon::parse($txn->date)->format('d/m/Y') }}</td>
-                                    <td class="py-4 px-6 text-sm text-white">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-lg {{ $txn->amount < 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400' }} flex items-center justify-center shrink-0">
-                                                <i class="fa-solid {{ $txn->amount < 0 ? 'fa-arrow-down' : 'fa-arrow-up' }} text-xs"></i>
-                                            </div>
-                                            <span class="truncate max-w-[200px] md:max-w-md pb-[2px]">{{ $txn->description }}</span>
-                                        </div>
+                                @foreach($group as $inv)
+                                <tr class="hover:bg-slate-700/20 transition-colors group/row">
+                                    <td class="px-6 py-4 font-medium text-slate-200">
+                                        {{ $inv->name }}
                                     </td>
-                                    <td class="py-4 px-6 text-sm text-slate-400 whitespace-nowrap">{{ $txn->bankAccount->name }}</td>
-                                    <td class="py-4 px-6 text-sm font-semibold text-right whitespace-nowrap {{ $txn->amount < 0 ? 'text-white' : 'text-emerald-400' }}">
-                                        {{ $txn->amount < 0 ? '-' : '+' }} R$ {{ number_format(abs($txn->amount), 2, ',', '.') }}
+                                    <td class="px-6 py-4 text-slate-400">
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-700/50 border border-slate-600">
+                                            {{ $inv->subtype ?? 'N/A' }}
+                                        </span>
                                     </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="4" class="py-12 px-6 text-center text-slate-500">
-                                        As transações aparecerão aqui após conectar uma conta.
+                                    <td class="px-6 py-4 text-slate-400 text-xs">
+                                        Conta Final {{ substr($inv->pluggy_item_id, -4) }}
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <span class="font-semibold text-emerald-400">
+                                            R$ {{ number_format($inv->balance, 2, ',', '.') }}
+                                        </span>
                                     </td>
                                 </tr>
-                                @endforelse
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
+                @endforeach
+                @endif
             </div>
         </div>
 
     </main>
+
+    <script>
+        function switchTab(tabName) {
+            document.getElementById('tab-overview').classList.add('hidden');
+            document.getElementById('tab-investments').classList.add('hidden');
+
+            document.getElementById('tab-btn-overview').className = "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors";
+            document.getElementById('tab-btn-investments').className = "border-transparent text-slate-400 hover:border-slate-500 hover:text-slate-300 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors";
+
+            document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+            if (tabName === 'overview') {
+                document.getElementById('tab-btn-' + tabName).className = "border-fuchsia-500 text-fuchsia-400 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors";
+            } else {
+                document.getElementById('tab-btn-' + tabName).className = "border-emerald-500 text-emerald-400 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors";
+            }
+        }
+    </script>
 
     @if($connectToken)
     <script>
         document.getElementById('pluggyConnectBtn').addEventListener('click', () => {
             const pluggyConnect = new PluggyConnect({
                 connectToken: '{{ $connectToken }}',
+                includeSandbox: true,
                 onSuccess: (itemData) => {
                     // Item created successfully
                     console.log('Success!', itemData);
@@ -217,4 +348,5 @@
     @endif
 
 </body>
+
 </html>
