@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceApp - Gestão Inteligente</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Pluggy Connect Widget -->
+    <script src="https://cdn.pluggy.ai/pluggy-connect/v1.0.0/pluggy-connect.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.2); }
+        .gradient-text { background: linear-gradient(135deg, #a78bfa, #c084fc, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#a78bfa',
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50 shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-pink-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                    <i class="fa-solid fa-wallet text-white text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold tracking-tight">Finance<span class="gradient-text">App</span></h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-sm font-medium text-slate-300">Sistema Conectado</span>
+                </div>
+                <button class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 transition">
+                    <i class="fa-regular fa-bell text-slate-300"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        
+        <!-- Messages -->
+        @if(session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex gap-3 items-center text-emerald-400">
+            <i class="fa-solid fa-circle-check"></i>
+            <p>{{ session('success') }}</p>
+        </div>
+        @endif
+        @if(session('error'))
+        <div class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex gap-3 items-center text-red-400">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <p>{{ session('error') }}</p>
+        </div>
+        @endif
+
+        <!-- Dashboard Overview Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            
+            <div class="md:col-span-2 glass rounded-3xl p-8 card-hover relative overflow-hidden group">
+                <div class="absolute -right-10 -top-10 w-40 h-40 bg-violet-600/20 rounded-full blur-3xl group-hover:bg-violet-600/30 transition duration-500"></div>
+                <p class="text-slate-400 font-medium mb-1 uppercase tracking-wider text-sm">Saldo Consolidado</p>
+                <div class="flex items-baseline gap-2 mb-4">
+                    <span class="text-5xl font-bold text-white">R$ {{ number_format($totalBalance, 2, ',', '.') }}</span>
+                </div>
+                <div class="flex gap-4 opacity-80">
+                    <div class="flex items-center gap-1 text-emerald-400 text-sm font-medium"><i class="fa-solid fa-arrow-trend-up"></i> Atualizado hoje</div>
+                    <div class="flex items-center gap-1 text-slate-300 text-sm"><i class="fa-solid fa-building-columns relative top-[-1px]"></i> {{ $accounts->count() }} Contas vinculadas</div>
+                </div>
+            </div>
+
+            <div class="glass rounded-3xl p-8 card-hover flex flex-col items-center justify-center text-center">
+                <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Conectar Nova Instituição</h3>
+                <p class="text-slate-400 text-sm mb-5">Vincule sua conta bancária de forma segura via Pluggy.</p>
+                
+                @if($connectToken)
+                    <button id="pluggyConnectBtn" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-violet-500/25">
+                        <i class="fa-solid fa-plug mr-2"></i> Conectar Banco
+                    </button>
+                    <!-- Form for callback (sync) -->
+                    <form id="syncForm" method="POST" action="/pluggy/sync" class="hidden">
+                        @csrf
+                        <input type="hidden" name="item_id" id="syncItemId">
+                    </form>
+                @else
+                    <div class="w-full py-3 px-6 rounded-xl bg-red-500/10 text-red-400 text-sm font-medium border border-red-500/20">
+                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Credenciais inválidas no .env (API Key).
+                    </div>
+                @endif
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Accounts List -->
+            <div class="lg:col-span-1 space-y-4">
+                <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i class="fa-solid fa-building-columns text-slate-400 text-sm"></i> Minhas Contas</h2>
+                
+                @forelse($accounts as $acc)
+                <div class="glass rounded-2xl p-5 card-hover">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-semibold text-white text-lg">{{ $acc->name }}</h4>
+                            <p class="text-xs text-slate-400 uppercase tracking-wide">{{ $acc->type }}</p>
+                        </div>
+                        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
+                            <i class="fa-solid fa-wallet text-slate-400 text-xs"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold tracking-tight text-white">R$ {{ number_format($acc->balance, 2, ',', '.') }}</p>
+                        <p class="text-xs text-emerald-400 mt-1"><i class="fa-solid fa-circle text-[8px] mr-1"></i>Sincronizado</p>
+                    </div>
+                </div>
+                @empty
+                <div class="glass border-dashed border-2 border-slate-700 rounded-2xl p-8 text-center text-slate-500">
+                    Nenhuma conta bancária vinculada.
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Transactions -->
+            <div class="lg:col-span-2">
+                <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i class="fa-regular fa-rectangle-list text-slate-400 text-sm"></i> Últimas Transações</h2>
+                
+                <div class="glass rounded-3xl overflow-hidden shadow-xl border border-slate-700/50">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-800/80 border-b border-slate-700/80">
+                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Data</th>
+                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Descrição</th>
+                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Conta</th>
+                                    <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium text-right">Valor</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                @forelse($transactions as $txn)
+                                <tr class="hover:bg-slate-800/40 transition">
+                                    <td class="py-4 px-6 text-sm text-slate-300 font-medium whitespace-nowrap">{{ \Carbon\Carbon::parse($txn->date)->format('d/m/Y') }}</td>
+                                    <td class="py-4 px-6 text-sm text-white">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-lg {{ $txn->amount < 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400' }} flex items-center justify-center shrink-0">
+                                                <i class="fa-solid {{ $txn->amount < 0 ? 'fa-arrow-down' : 'fa-arrow-up' }} text-xs"></i>
+                                            </div>
+                                            <span class="truncate max-w-[200px] md:max-w-md pb-[2px]">{{ $txn->description }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-sm text-slate-400 whitespace-nowrap">{{ $txn->bankAccount->name }}</td>
+                                    <td class="py-4 px-6 text-sm font-semibold text-right whitespace-nowrap {{ $txn->amount < 0 ? 'text-white' : 'text-emerald-400' }}">
+                                        {{ $txn->amount < 0 ? '-' : '+' }} R$ {{ number_format(abs($txn->amount), 2, ',', '.') }}
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="4" class="py-12 px-6 text-center text-slate-500">
+                                        As transações aparecerão aqui após conectar uma conta.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    @if($connectToken)
+    <script>
+        document.getElementById('pluggyConnectBtn').addEventListener('click', () => {
+            const pluggyConnect = new PluggyConnect({
+                connectToken: '{{ $connectToken }}',
+                onSuccess: (itemData) => {
+                    // Item created successfully
+                    console.log('Success!', itemData);
+                    // Pass the item_id to sync
+                    document.getElementById('syncItemId').value = itemData.item.id;
+                    document.getElementById('syncForm').submit();
+                },
+                onError: (error) => {
+                    console.error('Pluggy Connect Error:', error);
+                    alert('Erro ao conectar banco: ' + (error.message || 'Desconhecido'));
+                },
+                onClose: () => {
+                    console.log('Connect widget closed');
+                }
+            });
+
+            pluggyConnect.init();
+        });
+    </script>
+    @endif
+
+</body>
+</html>
