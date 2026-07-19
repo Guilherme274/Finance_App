@@ -22,6 +22,11 @@ class BankAccountResource extends Resource
     protected static ?string $modelLabel = 'Conta Bancária';
     protected static ?string $pluralModelLabel = 'Contas Bancárias';
 
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->where('user_id', auth()->id());
+    }
+
     public static function form(Form $form): Form
     {
         return $form

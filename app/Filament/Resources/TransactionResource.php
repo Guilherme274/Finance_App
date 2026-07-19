@@ -33,7 +33,7 @@ class TransactionResource extends Resource
             ->schema([
                 Forms\Components\Select::make('bank_account_id')
                     ->label('Conta Bancária')
-                    ->options(fn() => BankAccount::get()->pluck('display_name', 'id'))
+                    ->options(fn() => BankAccount::where('user_id', auth()->id())->get()->pluck('display_name', 'id'))
                     ->searchable()
                     ->preload()
                     ->reactive()
@@ -117,7 +117,10 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('description')
                     ->label('Descrição')
                     ->searchable()
-                    ->weight('medium'),
+                    ->weight('medium')
+                    ->description(fn(Transaction $record) => $record->notes)
+                    ->icon(fn(Transaction $record) => str_contains(strtolower($record->notes ?? ''), 'pai') ? 'heroicon-m-currency-dollar' : null)
+                    ->iconColor('warning'),
                 Tables\Columns\TextColumn::make('category')
                     ->label('Categoria')
                     ->badge()
@@ -148,7 +151,7 @@ class TransactionResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('bank_account_id')
                     ->label('Conta Bancária')
-                    ->options(fn() => BankAccount::get()->pluck('display_name', 'id')),
+                    ->options(fn() => BankAccount::where('user_id', auth()->id())->get()->pluck('display_name', 'id')),
                 Tables\Filters\SelectFilter::make('category')
                     ->label('Categoria')
                     ->options([
@@ -186,7 +189,7 @@ class TransactionResource extends Resource
                     ->form([
                         Forms\Components\Select::make('bank_account_id')
                             ->label('Conta de Origem dos Dados')
-                            ->options(fn() => BankAccount::get()->pluck('display_name', 'id'))
+                            ->options(fn() => BankAccount::where('user_id', auth()->id())->get()->pluck('display_name', 'id'))
                             ->required()
                             ->helperText('As transações serão vinculadas a esta conta. Nubank = Crédito | Mercado Pago = Pix/Débito.'),
                         Forms\Components\FileUpload::make('spreadsheet')
@@ -216,12 +219,25 @@ class TransactionResource extends Resource
                             $mapping = $parser->detectColumnMapping($headers);
                             
                             $importedCount = 0;
+                            $netChange = 0;
                             foreach ($rows as $row) {
                                 $mapped = $parser->mapRow($row, $mapping, $bankAccount);
                                 if ($mapped) {
                                     Transaction::create($mapped);
                                     $importedCount++;
+
+                                    $amount = (float) $mapped['amount'];
+                                    if ($bankAccount && $bankAccount->type === 'CREDIT') {
+                                        $netChange += ($mapped['type'] === 'CREDIT') ? -$amount : $amount;
+                                    } else {
+                                        $netChange += ($mapped['type'] === 'CREDIT') ? $amount : -$amount;
+                                    }
                                 }
+                            }
+
+                            if ($bankAccount) {
+                                $bankAccount->balance += $netChange;
+                                $bankAccount->save();
                             }
 
                             SpreadsheetImport::create([
@@ -273,6 +289,12 @@ class TransactionResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $userAccountIds = BankAccount::where('user_id', auth()->id())->pluck('id')->toArray();
+        return parent::getEloquentQuery()->whereIn('bank_account_id', $userAccountIds);
     }
 
     public static function getRelations(): array

@@ -30,8 +30,17 @@ class AdminPanelProvider extends PanelProvider
             ->profile(\App\Filament\Pages\Auth\EditProfile::class)
             ->brandName('Finance App')
             ->colors([
-                'primary' => Color::Indigo,
+                'primary' => Color::Violet,
+                'gray'    => Color::Slate,
+                'info'    => Color::Sky,
+                'success' => Color::Emerald,
+                'warning' => Color::Amber,
+                'danger'  => Color::Rose,
             ])
+            ->font('Outfit')
+            ->spa()
+            ->sidebarCollapsibleOnDesktop()
+            ->maxContentWidth('7xl')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([

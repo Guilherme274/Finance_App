@@ -205,6 +205,13 @@ class SpreadsheetParserService
             $category = $this->inferCategory($desc);
         }
 
+        $notes = null;
+        $dLower = strtolower($desc);
+        if (str_contains($dLower, 'unisant') || str_contains($dLower, 'matriculagrad')) {
+            $category = 'Assinatura';
+            $notes = 'Pago pelo pai (Reembolsado)';
+        }
+
         return [
             'bank_account_id' => $bankAccount?->id,
             'description'     => $desc,
@@ -213,6 +220,7 @@ class SpreadsheetParserService
             'type'            => $type,
             'category'        => $category,
             'account_name'    => $account,
+            'notes'           => $notes,
         ];
     }
 

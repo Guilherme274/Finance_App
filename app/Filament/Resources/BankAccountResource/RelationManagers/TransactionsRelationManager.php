@@ -27,9 +27,29 @@ class TransactionsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->defaultSort('date', 'desc')
             ->recordTitleAttribute('description')
             ->columns([
-                Tables\Columns\TextColumn::make('description'),
+                Tables\Columns\TextColumn::make('date')
+                    ->label('Data')
+                    ->date('d/m/Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->label('Descrição')
+                    ->searchable()
+                    ->description(fn($record) => $record->notes)
+                    ->icon(fn($record) => str_contains(strtolower($record->notes ?? ''), 'pai') ? 'heroicon-m-currency-dollar' : null)
+                    ->iconColor('warning'),
+                Tables\Columns\TextColumn::make('type')
+                    ->label('Tipo')
+                    ->badge()
+                    ->color(fn(string $state): string => $state === 'CREDIT' ? 'warning' : 'danger')
+                    ->formatStateUsing(fn(string $state): string => $state === 'CREDIT' ? 'Crédito' : 'Pix / Débito'),
+                Tables\Columns\TextColumn::make('amount')
+                    ->label('Valor')
+                    ->money('BRL')
+                    ->color(fn($record): string => $record->type === 'CREDIT' ? 'success' : 'danger')
+                    ->sortable(),
             ])
             ->filters([
                 //
