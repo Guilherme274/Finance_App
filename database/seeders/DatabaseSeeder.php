@@ -17,9 +17,32 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Usuário Administrador',
+                'password' => bcrypt('password'),
+            ]
+        );
+
+        \App\Models\BankAccount::firstOrCreate(
+            ['user_id' => $user->id, 'name' => 'Nubank'],
+            [
+                'institution' => 'Nubank',
+                'balance' => 0.00,
+                'type' => 'CREDIT',
+                'color' => '#8b5cf6',
+            ]
+        );
+
+        \App\Models\BankAccount::firstOrCreate(
+            ['user_id' => $user->id, 'name' => 'Mercado Pago'],
+            [
+                'institution' => 'Mercado Pago',
+                'balance' => 0.00,
+                'type' => 'DEBIT',
+                'color' => '#009ee3',
+            ]
+        );
     }
 }

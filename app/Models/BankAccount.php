@@ -8,13 +8,17 @@ class BankAccount extends Model
 {
     protected $fillable = [
         'user_id',
-        'pluggy_item_id',
-        'pluggy_account_id',
         'name',
+        'institution',
         'balance',
         'currency',
         'type',
-        'subtype',
+        'color',
+        'notes',
+    ];
+
+    protected $casts = [
+        'balance' => 'float',
     ];
 
     public function user()
@@ -25,5 +29,18 @@ class BankAccount extends Model
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function getDisplayNameAttribute(): string
+    {
+        $typeLabel = match ($this->type) {
+            'CREDIT'   => 'Cartão de Crédito',
+            'DEBIT'    => 'Pix / Débito',
+            'CHECKING' => 'Conta Corrente',
+            'SAVINGS'  => 'Poupança',
+            default    => $this->type ?? 'Geral',
+        };
+
+        return "{$this->name} ({$typeLabel})";
     }
 }

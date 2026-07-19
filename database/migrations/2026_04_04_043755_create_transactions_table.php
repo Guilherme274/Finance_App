@@ -6,27 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bank_account_id')->constrained()->cascadeOnDelete();
-            $table->string('pluggy_transaction_id')->unique();
+            $table->foreignId('bank_account_id')->nullable()->constrained()->nullOnDelete();
             $table->string('description')->nullable();
             $table->decimal('amount', 15, 2);
             $table->date('date');
-            $table->string('status')->nullable();
-            $table->string('type')->nullable(); // CREDIT, DEBIT
+            $table->string('type')->default('DEBIT'); // CREDIT, DEBIT
+            $table->string('category')->nullable(); // Alimentação, Transporte, etc.
+            $table->json('tags')->nullable();
+            $table->boolean('is_fixed')->default(false); // Gasto fixo mensal
+            $table->string('account_name')->nullable(); // Nome da conta importada
+            $table->text('notes')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('transactions');

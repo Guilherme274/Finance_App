@@ -7,8 +7,7 @@
     <title>FinanceApp - Gestão Inteligente</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Pluggy Connect Widget -->
-    <script src="https://cdn.pluggy.ai/pluggy-connect/latest/pluggy-connect.js"></script>
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -126,28 +125,27 @@
                     </div>
                 </div>
 
-                <div class="glass rounded-3xl p-8 card-hover flex flex-col items-center justify-center text-center">
-                    <div class="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-link text-violet-400 text-2xl"></i>
+                <div class="glass rounded-3xl p-6 card-hover flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-down text-violet-400"></i> Importação de Dados
+                        </h3>
+                        <p class="text-slate-400 text-sm mb-4">Sincronize Mercado Pago ou importe CSV do Nubank.</p>
+                        
+                        <div class="space-y-3">
+                            <button onclick="syncMercadoPago()" id="btn-sync-mp" class="w-full py-2.5 px-4 rounded-xl bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 text-sm font-medium border border-blue-500/30 transition-colors flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-rotate"></i> Sincronizar Mercado Pago
+                            </button>
+                            
+                            <form id="form-import-nubank" onsubmit="importNubank(event)" class="w-full">
+                                <label for="nubank-csv" class="w-full py-2.5 px-4 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-sm font-medium border border-purple-500/30 transition-colors flex items-center justify-center gap-2 cursor-pointer">
+                                    <i class="fa-solid fa-file-csv"></i> Importar CSV Nubank
+                                </label>
+                                <input type="file" id="nubank-csv" accept=".csv, .xlsx" class="hidden" onchange="document.getElementById('btn-submit-nubank').click()">
+                                <button type="submit" id="btn-submit-nubank" class="hidden"></button>
+                            </form>
+                        </div>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2">Conectar Nova Instituição</h3>
-                    <p class="text-slate-400 text-sm mb-5">Vincule sua conta bancária de forma segura via Pluggy.</p>
-
-                    @if($connectToken)
-                    <button id="pluggyConnectBtn" class="w-full py-3 px-6 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-semibold transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-violet-500/25">
-                        <i class="fa-solid fa-plug mr-2"></i> Conectar Banco
-                    </button>
-                    <!-- Form for callback (sync) -->
-                    <form id="syncForm" method="POST" action="/pluggy/sync" class="hidden">
-                        @csrf
-                        <input type="hidden" name="item_id" id="syncItemId">
-                    </form>
-                    @else
-                    <div class="w-full py-3 px-4 rounded-xl bg-red-500/10 text-red-400 text-xs text-left font-medium border border-red-500/20 break-words">
-                        <i class="fa-solid fa-triangle-exclamation mr-1"></i> Erro de Conexão: <br>
-                        {{ $connectError ?? 'Credenciais da Pluggy ausentes no .env' }}
-                    </div>
-                    @endif
                 </div>
 
             </div>
@@ -180,42 +178,66 @@
                     @endforelse
                 </div>
 
-                <!-- Transactions -->
                 <div class="lg:col-span-2">
-                    <h2 class="text-xl font-bold flex items-center gap-2 mb-4"><i class="fa-regular fa-rectangle-list text-slate-400 text-sm"></i> Últimas Transações</h2>
+                    <div class="flex justify-between items-center mb-4 flex-wrap gap-3">
+                        <h2 class="text-xl font-bold flex items-center gap-2"><i class="fa-regular fa-rectangle-list text-slate-400 text-sm"></i> Últimas Transações</h2>
+                        <div class="flex items-center gap-2">
+                            <form action="{{ route('dashboard') }}" method="GET" class="flex items-center gap-2">
+                                <input type="date" name="start_date" value="{{ request('start_date', $startDate ?? \Carbon\Carbon::now()->startOfMonth()->toDateString()) }}" class="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block p-2">
+                                <span class="text-slate-500">até</span>
+                                <input type="date" name="end_date" value="{{ request('end_date', $endDate ?? \Carbon\Carbon::now()->endOfMonth()->toDateString()) }}" class="bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-lg focus:ring-violet-500 focus:border-violet-500 block p-2">
+                                <button type="submit" class="bg-violet-600 hover:bg-violet-700 text-white p-2 rounded-lg transition-colors" title="Filtrar por data"><i class="fa-solid fa-filter"></i></button>
+                            </form>
+                            <button id="bulk-delete-btn" onclick="bulkDeleteTransactions()" class="hidden px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-red-500/20">
+                                <i class="fa-solid fa-trash"></i> (<span id="bulk-count">0</span>)
+                            </button>
+                        </div>
+                    </div>
 
                     <div class="glass rounded-3xl overflow-hidden shadow-xl border border-slate-700/50">
                         <div class="overflow-x-auto">
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="bg-slate-800/80 border-b border-slate-700/80">
+                                        <th class="py-4 px-6 w-12 text-center text-xs uppercase tracking-wider text-slate-400 font-medium">
+                                            <input type="checkbox" id="selectAll" onclick="toggleAllTx(this)" class="w-4 h-4 rounded border-slate-700 text-violet-500 focus:ring-violet-500 bg-slate-900 cursor-pointer">
+                                        </th>
                                         <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Data</th>
                                         <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Descrição</th>
                                         <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium">Conta</th>
                                         <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium text-right">Valor</th>
+                                        <th class="py-4 px-6 text-xs uppercase tracking-wider text-slate-400 font-medium text-center">Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-700/50">
                                     @forelse($transactions as $txn)
-                                    <tr class="hover:bg-slate-800/40 transition">
+                                    <tr id="tx-row-{{ $txn->id }}" class="hover:bg-slate-800/40 transition">
+                                        <td class="py-4 px-6 text-center">
+                                            <input type="checkbox" class="tx-checkbox w-4 h-4 rounded border-slate-700 text-violet-500 focus:ring-violet-500 bg-slate-900 cursor-pointer" value="{{ $txn->id }}" onclick="checkTx(event)">
+                                        </td>
                                         <td class="py-4 px-6 text-sm text-slate-300 font-medium whitespace-nowrap">{{ \Carbon\Carbon::parse($txn->date)->format('d/m/Y') }}</td>
                                         <td class="py-4 px-6 text-sm text-white">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-8 h-8 rounded-lg {{ $txn->amount < 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-emerald-500/10 text-emerald-400' }} flex items-center justify-center shrink-0">
                                                     <i class="fa-solid {{ $txn->amount < 0 ? 'fa-arrow-down' : 'fa-arrow-up' }} text-xs"></i>
                                                 </div>
-                                                <span class="truncate max-w-[200px] md:max-w-md pb-[2px]">{{ $txn->description }}</span>
+                                                <span class="truncate max-w-[150px] md:max-w-xs pb-[2px]">{{ $txn->description }}</span>
                                             </div>
                                         </td>
-                                        <td class="py-4 px-6 text-sm text-slate-400 whitespace-nowrap">{{ $txn->bankAccount->name }}</td>
+                                        <td class="py-4 px-6 text-sm text-slate-400 whitespace-nowrap">{{ optional($txn->bankAccount)->name ?? 'Conta Desconhecida' }}</td>
                                         <td class="py-4 px-6 text-sm font-semibold text-right whitespace-nowrap {{ $txn->amount < 0 ? 'text-white' : 'text-emerald-400' }}">
                                             {{ $txn->amount < 0 ? '-' : '+' }} R$ {{ number_format(abs($txn->amount), 2, ',', '.') }}
+                                        </td>
+                                        <td class="py-4 px-6 text-center whitespace-nowrap">
+                                            <button onclick="deleteTransaction({{ $txn->id }})" class="p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors" title="Excluir">
+                                                <i class="fa-solid fa-trash text-xs"></i>
+                                            </button>
                                         </td>
                                     </tr>
                                     @empty
                                     <tr>
-                                        <td colspan="4" class="py-12 px-6 text-center text-slate-500">
-                                            As transações aparecerão aqui após conectar uma conta.
+                                        <td colspan="6" class="py-12 px-6 text-center text-slate-500">
+                                            As transações aparecerão aqui após conectar uma conta ou importar dados.
                                         </td>
                                     </tr>
                                     @endforelse
@@ -303,6 +325,63 @@
     </main>
 
     <script>
+        const csrfToken = '{{ csrf_token() }}';
+
+        function syncMercadoPago() {
+            const btn = document.getElementById('btn-sync-mp');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sincronizando...';
+            btn.disabled = true;
+
+            fetch('/api/mercadopago/sync', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                alert('Mercado Pago sincronizado com sucesso!');
+                location.reload();
+            })
+            .catch(() => {
+                alert('Erro ao sincronizar Mercado Pago.');
+                btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Sincronizar Mercado Pago';
+                btn.disabled = false;
+            });
+        }
+
+        function importNubank(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('nubank-csv');
+            if (!fileInput.files.length) return;
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('account_name', 'Nubank');
+
+            const label = document.querySelector('label[for="nubank-csv"]');
+            const originalContent = label.innerHTML;
+            label.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importando...';
+
+            fetch('/import/upload', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Erro na importação: ' + (data.error || 'Erro desconhecido.'));
+                    label.innerHTML = originalContent;
+                }
+            })
+            .catch(() => {
+                alert('Erro ao realizar upload do arquivo.');
+                label.innerHTML = originalContent;
+            });
+        }
+
         function switchTab(tabName) {
             document.getElementById('tab-overview').classList.add('hidden');
             document.getElementById('tab-investments').classList.add('hidden');
@@ -318,34 +397,93 @@
                 document.getElementById('tab-btn-' + tabName).className = "border-emerald-500 text-emerald-400 whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors";
             }
         }
-    </script>
 
-    @if($connectToken)
-    <script>
-        document.getElementById('pluggyConnectBtn').addEventListener('click', () => {
-            const pluggyConnect = new PluggyConnect({
-                connectToken: '{{ $connectToken }}',
-                includeSandbox: true,
-                onSuccess: (itemData) => {
-                    // Item created successfully
-                    console.log('Success!', itemData);
-                    // Pass the item_id to sync
-                    document.getElementById('syncItemId').value = itemData.item.id;
-                    document.getElementById('syncForm').submit();
-                },
-                onError: (error) => {
-                    console.error('Pluggy Connect Error:', error);
-                    alert('Erro ao conectar banco: ' + (error.message || 'Desconhecido'));
-                },
-                onClose: () => {
-                    console.log('Connect widget closed');
-                }
+        function toggleAllTx(el) {
+            const checkboxes = document.querySelectorAll('.tx-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = el.checked;
             });
+            toggleBulkDeleteBtn();
+        }
 
-            pluggyConnect.init();
-        });
+        function checkTx(event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            toggleBulkDeleteBtn();
+        }
+
+        function toggleBulkDeleteBtn() {
+            const checkedCount = document.querySelectorAll('.tx-checkbox:checked').length;
+            const btn = document.getElementById('bulk-delete-btn');
+            const countSpan = document.getElementById('bulk-count');
+            
+            if (countSpan) {
+                countSpan.textContent = checkedCount;
+            }
+            if (btn) {
+                if (checkedCount > 0) {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+            }
+        }
+
+        function deleteTransaction(id) {
+            if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
+            fetch('/api/transactions/' + id, {
+                method: 'DELETE',
+                headers: { 'X-CSRF-TOKEN': csrfToken }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const row = document.getElementById('tx-row-' + id);
+                    if (row) {
+                        row.style.transition = 'opacity .3s';
+                        row.style.opacity = '0';
+                        setTimeout(() => {
+                            row.remove();
+                            location.reload();
+                        }, 300);
+                    } else {
+                        location.reload();
+                    }
+                }
+            })
+            .catch(() => alert('Erro ao excluir transação'));
+        }
+
+        function bulkDeleteTransactions() {
+            const checked = document.querySelectorAll('.tx-checkbox:checked');
+            if (checked.length === 0) return;
+            if (!confirm(`Tem certeza que deseja excluir as ${checked.length} transações selecionadas?`)) return;
+
+            const ids = Array.from(checked).map(cb => cb.value);
+
+            fetch('/api/transactions/bulk', {
+                method: 'DELETE',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken 
+                },
+                body: JSON.stringify({ ids: ids })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('selectAll').checked = false;
+                    toggleBulkDeleteBtn();
+                    location.reload();
+                } else {
+                    alert('Erro ao excluir em massa');
+                }
+            })
+            .catch(() => alert('Erro ao excluir em massa'));
+        }
     </script>
-    @endif
 
 </body>
 
